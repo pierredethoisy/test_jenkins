@@ -27,11 +27,14 @@ pipeline {
                         echo "No secrets found"
                     } else if (status == 1) {
                         def incidents = parseOutput(output)
-                        incidents.each { incidentUrlPart ->
-                            def response = callGitGuardianAPI(incidentUrlPart)
-                            def jsonResponse = new groovy.json.JsonSlurper().parseText(response.content)
-                            echo "Incident Date: ${jsonResponse.date}"
-                            echo "Incident Severity: ${jsonResponse.severity}"
+                        if (incidents.size() > 0) {
+                            incidents.each { incidentUrlPart ->
+                                def response = callGitGuardianAPI(incidentUrlPart)
+                                def jsonResponse = new groovy.json.JsonSlurper().parseText(response.content)
+                                echo "Incident Date: ${jsonResponse.date}"
+                                echo "Incident Severity: ${jsonResponse.severity}"
+                            }
+                            error "Secrets detected in the repository. Failing the pipeline."
                         }
                     }
                 }
