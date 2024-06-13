@@ -17,7 +17,7 @@ pipeline {
                 GITGUARDIAN_API_KEY = credentials('gitguardian-api-key')
             }
             steps {
-                sh 'ggshield secret scan ci'
+                sh 'ggshield secret scan repo .'
             }
         }
 
