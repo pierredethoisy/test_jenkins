@@ -29,8 +29,9 @@ pipeline {
                         def incidents = parseOutput(output)
                         incidents.each { incidentUrlPart ->
                             def response = callGitGuardianAPI(incidentUrlPart)
-                            echo "HTTP Request Response: ${response}"
-                            echo "Response Content: ${response.content}"
+                            def jsonResponse = new groovy.json.JsonSlurper().parseText(response.content)
+                            echo "Incident Date: ${jsonResponse.date}"
+                            echo "Incident Severity: ${jsonResponse.severity}"
                         }
                     }
                 }
