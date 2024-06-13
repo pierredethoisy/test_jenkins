@@ -19,8 +19,8 @@ pipeline {
             }
             steps {
                 script {
-                    // Install curl
-                    sh 'apk update && apk add curl'
+                    // Install curl using apt-get
+                    sh 'apt-get update && apt-get install -y curl'
 
                     def status = sh(script: "ggshield secret scan repo . --json > ggshield_output.json", returnStatus: true)
                     def output = readFile('ggshield_output.json')
