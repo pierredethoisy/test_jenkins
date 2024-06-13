@@ -17,7 +17,8 @@ pipeline {
                 GITGUARDIAN_API_KEY = credentials('gitguardian-api-key')
             }
             steps {
-                sh 'ggshield secret scan repo . --json'
+                def status = sh(script: "ggshield secret scan repo . --json > ggshield_output.json", returnStatus: true)
+
             }
         }
 
