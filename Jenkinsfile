@@ -21,7 +21,7 @@ pipeline {
                 script {
                     def status = sh(script: "ggshield secret scan repo . --json > ggshield_output.json", returnStatus: true)
                     def output = readFile('ggshield_output.json')
-                    def limitDate = $(date -d "2024-07-01"" +%s)
+                    def limitDate = sh(script: 'date -d "2024-07-01" +%s', returnStdout: true).trim().toLong()
                     echo "ggshield_output.json content: ${output}"
                     
                     if (status == 0) {
@@ -29,17 +29,20 @@ pipeline {
                     } else if (status == 1) {
                         def incidents = parseOutput(output)
                         if (incidents.size() > 0) {
+                            def error_status = 0
                             incidents.each { incidentUrlPart ->
                                 def response = callGitGuardianAPI(incidentUrlPart)
                                 def jsonResponse = new groovy.json.JsonSlurper().parseText(response.content)
-                                def incidentDate = $(date -d "${jsonResponse.date}" +%s)
-                                if ($limitDate -lt $incidentDate) {
-                                    def error_status = 1
+                                def incidentDate = sh(script: "date -d '${jsonResponse.date}' +%s", returnStdout: true).trim().toLong()
+                                if (limitDate < incidentDate) {
+                                    error_status = 1
                                     echo "Date is after July 1st"
-                                    echo $incidentDate 
+                                    echo "${incidentDate}"
                                 }
                             }
-                            error "Secrets detected in the repository. Failing the pipeline."
+                            if (error_status == 1) {
+                                error "Secrets detected in the repository. Failing the pipeline."
+                            }
                         }
                     }
                 }
