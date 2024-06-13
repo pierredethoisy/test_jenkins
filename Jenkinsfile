@@ -21,6 +21,7 @@ pipeline {
                 script {
                     def status = sh(script: "ggshield secret scan repo . --json > ggshield_output.json", returnStatus: true)
                     def output = readFile('ggshield_output.json')
+                    def limitDate = $(date -d "2024-07-01"" +%s)
                     echo "ggshield_output.json content: ${output}"
                     
                     if (status == 0) {
@@ -31,8 +32,12 @@ pipeline {
                             incidents.each { incidentUrlPart ->
                                 def response = callGitGuardianAPI(incidentUrlPart)
                                 def jsonResponse = new groovy.json.JsonSlurper().parseText(response.content)
-                                echo "Incident Date: ${jsonResponse.date}"
-                                echo "Incident Severity: ${jsonResponse.severity}"
+                                def incidentDate = $(date -d "${jsonResponse.date}" +%s)
+                                if ($limitDate -lt $incidentDate) {
+                                    def error_status = 1
+                                    echo "Date is after July 1st"
+                                    echo $incidentDate 
+                                }
                             }
                             error "Secrets detected in the repository. Failing the pipeline."
                         }
