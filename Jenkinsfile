@@ -26,28 +26,33 @@ pipeline {
                     if (status == 0) {
                         echo "no secret found"
                     } else if (status == 1) {
-                        def jsonSlurper = new groovy.json.JsonSlurper()
-                        def parsedOutput = jsonSlurper.parseText(output)
-                        
-                        parsedOutput.scans.each { scan -> 
-                            echo "Scan ID: ${scan.id}"
-                            scan.entities_with_incidents.each { entity ->
-                                entity.incidents.each { incident ->
-                                    echo "Incident ID: ${incident.incident_url}"
-                                    def incidentUrlParts = incident.incident_url.split('/')[-1]
-                                    echo incidentUrlParts
-                                    def response = httpRequest(
-                                        url: "https://api.gitguardian.com/v1/incidents/secrets/${incidentUrlParts}",
-                                        customHeaders: [[name: 'Authorization', value: "Token ${GITGUARDIAN_API_KEY}"]],
-                                        validResponseCodes: '200'
-                                    )
-                                    echo "HTTP Request Response: ${response}"
-                                    echo "response: ${response.content}"
-                                }
-                            }
-                        }
+                        parseAndHandleOutput(output)
                     }
                 }
+            }
+        }
+    }
+}
+
+@NonCPS
+def parseAndHandleOutput(String output) {
+    def jsonSlurper = new groovy.json.JsonSlurper()
+    def parsedOutput = jsonSlurper.parseText(output)
+    
+    parsedOutput.scans.each { scan -> 
+        echo "Scan ID: ${scan.id}"
+        scan.entities_with_incidents.each { entity ->
+            entity.incidents.each { incident ->
+                echo "Incident ID: ${incident.incident_url}"
+                def incidentUrlParts = incident.incident_url.split('/')[-1]
+                echo "Incident URL Part: ${incidentUrlParts}"
+                def response = httpRequest(
+                    url: "https://api.gitguardian.com/v1/incidents/secrets/${incidentUrlParts}",
+                    customHeaders: [[name: 'Authorization', value: "Token ${env.GITGUARDIAN_API_KEY}"]],
+                    validResponseCodes: '200'
+                )
+                echo "HTTP Request Response: ${response}"
+                echo "Response Content: ${response.content}"
             }
         }
     }
