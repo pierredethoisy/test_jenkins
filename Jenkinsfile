@@ -26,7 +26,12 @@ pipeline {
                     if (status == 0) {
                         echo "No secrets found"
                     } else if (status == 1) {
-                        parseAndHandleOutput(output)
+                        def incidents = parseOutput(output)
+                        incidents.each { incidentUrlPart ->
+                            def response = callGitGuardianAPI(incidentUrlPart)
+                            echo "HTTP Request Response: ${response}"
+                            echo "Response Content: ${response.content}"
+                        }
                     }
                 }
             }
@@ -35,10 +40,11 @@ pipeline {
 }
 
 @NonCPS
-def parseAndHandleOutput(String output) {
+def parseOutput(String output) {
     def jsonSlurper = new groovy.json.JsonSlurper()
     def parsedOutput = jsonSlurper.parseText(output)
-    
+    def incidentUrlPartsList = []
+
     parsedOutput.scans.each { scan -> 
         echo "Scan ID: ${scan.id}"
         scan.entities_with_incidents.each { entity ->
@@ -46,12 +52,11 @@ def parseAndHandleOutput(String output) {
                 echo "Incident ID: ${incident.incident_url}"
                 def incidentUrlParts = incident.incident_url.split('/')[-1]
                 echo "Incident URL Part: ${incidentUrlParts}"
-                def response = callGitGuardianAPI(incidentUrlParts)
-                echo "HTTP Request Response: ${response}"
-                echo "Response Content: ${response.content}"
+                incidentUrlPartsList << incidentUrlParts
             }
         }
     }
+    return incidentUrlPartsList
 }
 
 def callGitGuardianAPI(String incidentUrlParts) {
