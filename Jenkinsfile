@@ -19,6 +19,7 @@ pipeline {
             steps {
                 script {
                 def status = sh(script: "ggshield secret scan repo . --json > ggshield_output.json", returnStatus: true)
+                echo ggshield_output.json
                 }
             }
         }
