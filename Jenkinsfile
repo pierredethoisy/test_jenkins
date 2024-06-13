@@ -24,7 +24,7 @@ pipeline {
                     echo "ggshield_output.json content: ${output}"
                     
                     if (status == 0) {
-                        echo "no secret found"
+                        echo "No secrets found"
                     } else if (status == 1) {
                         parseAndHandleOutput(output)
                     }
@@ -46,14 +46,21 @@ def parseAndHandleOutput(String output) {
                 echo "Incident ID: ${incident.incident_url}"
                 def incidentUrlParts = incident.incident_url.split('/')[-1]
                 echo "Incident URL Part: ${incidentUrlParts}"
-                def response = httpRequest(
-                    url: "https://api.gitguardian.com/v1/incidents/secrets/${incidentUrlParts}",
-                    customHeaders: [[name: 'Authorization', value: "Token ${env.GITGUARDIAN_API_KEY}"]],
-                    validResponseCodes: '200'
-                )
+                
+                // Call the API and print the response
+                def response = callGitGuardianAPI(incidentUrlParts)
                 echo "HTTP Request Response: ${response}"
                 echo "Response Content: ${response.content}"
             }
         }
     }
+}
+
+@NonCPS
+def callGitGuardianAPI(String incidentUrlParts) {
+    return httpRequest(
+        url: "https://api.gitguardian.com/v1/incidents/secrets/${incidentUrlParts}",
+        customHeaders: [[name: 'Authorization', value: "Token ${env.GITGUARDIAN_API_KEY}"]],
+        validResponseCodes: '200'
+    )
 }
