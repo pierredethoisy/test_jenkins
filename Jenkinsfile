@@ -1,4 +1,3 @@
-
 pipeline {
     agent none
     stages {
@@ -47,10 +46,6 @@ def parseAndHandleOutput(String output) {
                 echo "Incident ID: ${incident.incident_url}"
                 def incidentUrlParts = incident.incident_url.split('/')[-1]
                 echo "Incident URL Part: ${incidentUrlParts}"
-                // Call the API and print the response
-                sh(script: "callGitGuardianAPI(incidentUrlParts) > api_output.json")
-                def http_output = readFile('api_output.json')
-                echo "http_output.json content: ${http_output}"
                 def response = callGitGuardianAPI(incidentUrlParts)
                 echo "HTTP Request Response: ${response}"
                 echo "Response Content: ${response.content}"
@@ -59,7 +54,6 @@ def parseAndHandleOutput(String output) {
     }
 }
 
-@NonCPS
 def callGitGuardianAPI(String incidentUrlParts) {
     return httpRequest(
         url: "https://api.gitguardian.com/v1/incidents/secrets/${incidentUrlParts}",
