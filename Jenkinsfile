@@ -40,7 +40,7 @@ pipeline {
                                                 echo "response: ${response.content}"
                                             }
                                 }
-
+                        }
                     }
                 }
             }
