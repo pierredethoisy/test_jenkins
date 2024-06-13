@@ -41,6 +41,7 @@ pipeline {
                                         customHeaders: [[name: 'Authorization', value: "Token ${GITGUARDIAN_API_KEY}"]],
                                         validResponseCodes: '200'
                                     )
+                                    echo "HTTP Request Response: ${response}"
                                     echo "response: ${response.content}"
                                 }
                             }
