@@ -1,0 +1,26 @@
+Hello there,
+
+#!/bin/bash
+
+# Configuration
+GITLAB_URL="your-gitlab-instance-url"  # Replace with your GitLab instance URL if different
+PRIVATE_TOKEN="your-gitlab_pat"  # Replace with your personal access token. You must be an administrator to view the activity of users with private profiles.
+
+# Get the date 90 days ago in YYYY-MM-DD format
+date_90_days_ago=$(date -v-90d +"%Y-%m-%d")
+
+# Function to get user activities from the last 90 days
+get_user_activities() {
+  local from_date=$1
+  curl --silent --header "Private-Token: $PRIVATE_TOKEN" "$GITLAB_URL/api/v4/user/activities?from=$from_date"
+}
+
+# Fetch user activities
+user_activities=$(get_user_activities "$date_90_days_ago")
+
+# Check if the response is valid JSON
+if ! echo "$user_activities" | jq empty > /dev/null 2>&1; then
+  echo "Error: Invalid JSON response from the API"
+  echo "Response: $user_activities"
+  exit 1
+fi
